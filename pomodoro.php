@@ -16,6 +16,34 @@ namespace Pressjitsu\Pomodoro;
 
 use Mo;
 
+class Pomodoro {
+	protected static $tmp_dir_path = '';
+
+	/**
+	 * @return string
+	 */
+	public static function get_temp_dir() {
+		if ( self::$tmp_dir_path ) {
+			return self::$tmp_dir_path;
+		}
+
+		if ( defined( 'POMODORO_CACHE_DIR' ) && POMODORO_CACHE_DIR ) {
+			$path_exists = wp_mkdir_p( POMODORO_CACHE_DIR );
+
+			// TODO trigger error here if $path_exists === false
+
+			if ( $path_exists ) {
+				self::$tmp_dir_path = POMODORO_CACHE_DIR;
+				return self::$tmp_dir_path;
+			}
+		}
+
+		self::$tmp_dir_path = get_temp_dir();
+
+		return self::$tmp_dir_path;
+	}
+}
+
 add_filter( 'override_load_textdomain', function( $plugin_override, $domain, $mofile ) {
 	if ( ! is_readable( $mofile ) ) {
 		return false;
@@ -61,11 +89,7 @@ class MoCache_Translation {
 		$this->domain = $domain;
 		$this->override = $override;
 
-		$temp_dir = get_temp_dir();
-
-		if ( defined( 'POMODORO_CACHE_DIR' ) && POMODORO_CACHE_DIR && wp_mkdir_p( POMODORO_CACHE_DIR ) ) {
-			$temp_dir = POMODORO_CACHE_DIR;
-		}
+		$temp_dir = Pomodoro::get_temp_dir();
 
 		$filename = md5( serialize( [ get_home_url(), $this->domain, $this->mofile ] ) );
 
