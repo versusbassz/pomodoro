@@ -141,37 +141,45 @@ class MoCache_Translation {
 
 		register_shutdown_function( function() use ( $cache_file, $_this, $mtime, $file_exists ) {
 			/**
+			 * About this check:
+			 * empty( $_this->cache ) && ! $file_exists
+			 *
+			 * The idea is that for consistency the plugin dumps even empty cache (i.e. $this->cache === [])
+			 */
+			if ( ! $_this->busted && ! ( empty( $_this->cache ) && ! $file_exists ) ) {
+				return;
+			}
+
+			/**
 			 * New values have been found. Dump everything into a valid PHP script.
 			 */
-			if ( $_this->busted || ( empty( $_this->cache ) && ! $file_exists ) ) {
-				$test_cache_file = "$cache_file.test";
+			$test_cache_file = "$cache_file.test";
 
-				file_put_contents(
-					$test_cache_file,
-					sprintf(
-						'<?php $_mtime = %d; $_domain = %s; $_cache = %s; // %s',
-						$mtime,
-						var_export( $_this->domain, true ),
-						var_export( $_this->cache, true ),
-						self::END
-					),
-					LOCK_EX
-				);
+			file_put_contents(
+				$test_cache_file,
+				sprintf(
+					'<?php $_mtime = %d; $_domain = %s; $_cache = %s; // %s',
+					$mtime,
+					var_export( $_this->domain, true ),
+					var_export( $_this->cache, true ),
+					self::END
+				),
+				LOCK_EX
+			);
 
-				// Test the file before committing.
-				$fp = fopen( $test_cache_file, 'rb' );
+			// Test the file before committing.
+			$fp = fopen( $test_cache_file, 'rb' );
 
-				fseek( $fp, -strlen( self::END ), SEEK_END );
+			fseek( $fp, -strlen( self::END ), SEEK_END );
 
-				if ( fgets( $fp ) === self::END ) {
-					rename( $test_cache_file, $cache_file );
-				} else {
-					trigger_error( "pomodoro {$test_cache_file} cache file missing end marker." );
-					unlink( $test_cache_file );
-				}
-
-				fclose( $fp );
+			if ( fgets( $fp ) === self::END ) {
+				rename( $test_cache_file, $cache_file );
+			} else {
+				trigger_error( "pomodoro {$test_cache_file} cache file missing end marker." );
+				unlink( $test_cache_file );
 			}
+
+			fclose( $fp );
 		} );
 	}
 
