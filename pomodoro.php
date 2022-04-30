@@ -49,6 +49,18 @@ class Pomodoro {
 		add_filter( 'override_load_textdomain', [ self::class, 'override_load_textdomain' ], 999, 3 );
 	}
 
+	/**
+	 * The handler for 'override_load_textdomain' filter in load_textdomain() function
+	 *
+	 * @see load_textdomain()
+	 *
+	 * @param bool $plugin_override The flag for load_textdomain() to stop loading a textdomain
+	 *                              if the value is true.
+	 * @param string $domain Text domain. Unique identifier for retrieving translated strings.
+	 * @param string $mofile Path to the .mo file.
+	 *
+	 * @return bool
+	 */
 	public static function override_load_textdomain( $plugin_override, $domain, $mofile ) {
 		if ( ! is_readable( $mofile ) ) {
 			return false;
