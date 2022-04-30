@@ -15,6 +15,7 @@
 namespace Pressjitsu\Pomodoro;
 
 use Mo;
+use Translations;
 
 Pomodoro::init();
 
@@ -102,7 +103,7 @@ class MoCache_Translation {
 	 *
 	 * @param string $mofile The path to the mo file.
 	 * @param string $domain The textdomain.
-	 * @param $override
+	 * @param Translations $override The class in the same domain, we have overridden it
 	 */
 	public function __construct( $mofile, $domain, $override ) {
 		$this->mofile = $mofile;
