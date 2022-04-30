@@ -72,7 +72,9 @@ class MoCache_Translation {
 
 		$mtime = filemtime( $this->mofile );
 
-		if ( $file_exists = file_exists( $cache_file ) ) {
+		$file_exists = file_exists( $cache_file );
+
+		if ( $file_exists ) {
 			/**
 			 * Load cache.
 			 *
