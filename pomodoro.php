@@ -13,6 +13,8 @@
  */
 namespace Pressjitsu\Pomodoro;
 
+use Mo;
+
 add_filter( 'override_load_textdomain', function( $plugin_override, $domain, $mofile ) {
 	if ( ! is_readable( $mofile ) ) {
 		return false;
@@ -128,7 +130,7 @@ class MoCache_Translation {
 		 * Default Mo upstream.
 		 */
 		if ( ! $this->upstream ) {
-			$this->upstream = new \Mo();
+			$this->upstream = new Mo();
 			do_action( 'load_textdomain', $this->domain, $this->mofile );
 			$this->upstream->import_from_file( $this->mofile );
 		}
