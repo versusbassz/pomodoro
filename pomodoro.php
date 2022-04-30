@@ -47,7 +47,7 @@ class MoCache_Translation {
 	/**
 	 * Cache file end marker.
 	 */
-	private $end = 'POMODORO_END_e867edfb-4a36-4643-8ad4-b95507068e44';
+	private const END = 'POMODORO_END_e867edfb-4a36-4643-8ad4-b95507068e44';
 
 	/**
 	 * Construct the main translation cache instance for a domain.
@@ -108,7 +108,7 @@ class MoCache_Translation {
 						$mtime,
 						var_export( $domain, true ),
 						var_export( $_this->cache, true ),
-						$this->end
+						self::END
 					),
 					LOCK_EX
 				);
@@ -116,9 +116,9 @@ class MoCache_Translation {
 				// Test the file before committing.
 				$fp = fopen( $test_cache_file, 'rb' );
 
-				fseek( $fp, -strlen( $_this->end ), SEEK_END );
+				fseek( $fp, -strlen( self::END ), SEEK_END );
 
-				if ( fgets( $fp ) === $_this->end ) {
+				if ( fgets( $fp ) === self::END ) {
 					rename( $test_cache_file, $cache_file );
 				} else {
 					trigger_error( "pomodoro {$test_cache_file} cache file missing end marker." );
