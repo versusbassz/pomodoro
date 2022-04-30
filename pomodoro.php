@@ -110,13 +110,14 @@ class MoCache_Translation {
 		$this->domain = $domain;
 		$this->override = $override;
 
+		$home_url = get_home_url();
 		$temp_dir = Pomodoro::get_temp_dir();
 
-		$filename = md5( serialize( [ get_home_url(), $this->domain, $this->mofile ] ) );
+		$filename = md5( serialize( [ $home_url, $this->domain, $this->mofile ] ) );
 
 		$cache_file = sprintf( '%s/%s.mocache', untrailingslashit( $temp_dir ), $filename );
 
-		$mtime = filemtime( $this->mofile );
+		$current_mtime = filemtime( $this->mofile );
 
 		$file_exists = file_exists( $cache_file );
 
@@ -127,19 +128,25 @@ class MoCache_Translation {
 			 * OPcache will grab the values from memory.
 			 */
 			include $cache_file;
-			$this->cache = &$_cache;
 
-			/**
-			 * Mofile has been modified, invalidate it all.
-			 */
-			if ( ! isset( $_mtime ) || $_mtime < $mtime ) {
+			/** @var int $_mtime */
+			/** @var string $_domain */
+			/** @var array $_cache */
+
+			$cached_mtime = $_mtime ?? 0;
+
+			if ( isset( $_mtime ) && isset( $_cache ) && $cached_mtime === $current_mtime ) {
+				$this->cache = &$_cache;
+			} else {
+				// Mofile has been modified, or it's invalid (doesn't contain necessary data).
+				// Invalidate the cache (immediately) and rebuild the cached file (on shutdown) as a consequence
 				$this->cache = [];
 			}
 		}
 
 		$_this = $this;
 
-		register_shutdown_function( function() use ( $cache_file, $_this, $mtime, $file_exists ) {
+		register_shutdown_function( function() use ( $cache_file, $_this, $current_mtime, $file_exists ) {
 			/**
 			 * About this check:
 			 * empty( $_this->cache ) && ! $file_exists
@@ -159,7 +166,7 @@ class MoCache_Translation {
 				$test_cache_file,
 				sprintf(
 					'<?php $_mtime = %d; $_domain = %s; $_cache = %s; // %s',
-					$mtime,
+					$current_mtime,
 					var_export( $_this->domain, true ),
 					var_export( $_this->cache, true ),
 					self::END
