@@ -190,6 +190,13 @@ class MoCache_Translation {
 		} );
 	}
 
+	/**
+	 * @param string $cache_key The hash of arguments of the higher functions (see $args parameter)
+	 * @param string $text The string to translate
+	 * @param array $args The arguments of the higher functions themselves
+	 *
+	 * @return mixed
+	 */
 	private function get_translation( $cache_key, $text, $args ) {
 		/**
 		 * Check cache first.
