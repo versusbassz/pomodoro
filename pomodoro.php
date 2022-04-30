@@ -98,8 +98,10 @@ class MoCache_Translation {
 			 * New values have been found. Dump everything into a valid PHP script.
 			 */
 			if ( $_this->busted || ( empty( $_this->cache ) && ! $file_exists ) ) {
+				$test_cache_file = "$cache_file.test";
+
 				file_put_contents(
-					"$cache_file.test",
+					$test_cache_file,
 					sprintf(
 						'<?php $_mtime = %d; $_domain = %s; $_cache = %s; // %s',
 						$mtime,
@@ -111,15 +113,15 @@ class MoCache_Translation {
 				);
 
 				// Test the file before committing.
-				$fp = fopen( "$cache_file.test", 'rb' );
+				$fp = fopen( $test_cache_file, 'rb' );
 
 				fseek( $fp, -strlen( $_this->end ), SEEK_END );
 
 				if ( fgets( $fp ) == $_this->end ) {
-					rename( "$cache_file.test", $cache_file );
+					rename( $test_cache_file, $cache_file );
 				} else {
-					trigger_error( "pomodoro $cache_file.test cache file missing end marker." );
-					unlink( "$cache_file.test" );
+					trigger_error( "pomodoro {$test_cache_file} cache file missing end marker." );
+					unlink( $test_cache_file );
 				}
 
 				fclose( $fp );
