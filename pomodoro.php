@@ -16,6 +16,8 @@ namespace Pressjitsu\Pomodoro;
 
 use Mo;
 
+Pomodoro::init();
+
 class Pomodoro {
 	protected static $tmp_dir_path = '';
 
@@ -42,22 +44,26 @@ class Pomodoro {
 
 		return self::$tmp_dir_path;
 	}
-}
 
-add_filter( 'override_load_textdomain', function( $plugin_override, $domain, $mofile ) {
-	if ( ! is_readable( $mofile ) ) {
-		return false;
+	public static function init() {
+		add_filter( 'override_load_textdomain', [ self::class, 'override_load_textdomain' ], 999, 3 );
 	}
 
-	global $l10n;
+	public static function override_load_textdomain( $plugin_override, $domain, $mofile ) {
+		if ( ! is_readable( $mofile ) ) {
+			return false;
+		}
 
-	$upstream = empty( $l10n[ $domain ] ) ? null : $l10n[ $domain ];
+		global $l10n;
 
-	$mo = new MoCache_Translation( $mofile, $domain, $upstream );
-	$l10n[ $domain ] = $mo;
+		$upstream = empty( $l10n[ $domain ] ) ? null : $l10n[ $domain ];
 
-	return true;
-}, 999, 3 );
+		$mo = new MoCache_Translation( $mofile, $domain, $upstream );
+		$l10n[ $domain ] = $mo;
+
+		return true;
+	}
+}
 
 class MoCache_Translation {
 	private $domain;
