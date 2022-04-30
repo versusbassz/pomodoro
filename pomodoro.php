@@ -86,7 +86,7 @@ class MoCache_Translation {
 			/**
 			 * Mofile has been modified, invalidate it all.
 			 */
-			if ( ! isset( $_mtime ) || ( isset( $_mtime ) && $_mtime < $mtime ) ) {
+			if ( ! isset( $_mtime ) || $_mtime < $mtime ) {
 				$this->cache = [];
 			}
 		}
