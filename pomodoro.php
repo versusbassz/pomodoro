@@ -22,7 +22,9 @@ add_filter( 'override_load_textdomain', function( $plugin_override, $domain, $mo
 
 	global $l10n;
 
-	$mo = new MoCache_Translation( $mofile, $domain, $upstream = empty( $l10n[ $domain ] ) ? null : $l10n[ $domain ] );
+	$upstream = empty( $l10n[ $domain ] ) ? null : $l10n[ $domain ];
+
+	$mo = new MoCache_Translation( $mofile, $domain, $upstream );
 	$l10n[ $domain ] = $mo;
 
 	return true;
@@ -86,7 +88,17 @@ class MoCache_Translation {
 			 * New values have been found. Dump everything into a valid PHP script.
 			 */
 			if ( $_this->busted || ( empty( $_this->cache ) && ! $file_exists ) ) {
-				file_put_contents( "$cache_file.test", sprintf( '<?php $_mtime = %d; $_domain = %s; $_cache = %s; // %s', $mtime, var_export( $domain, true ), var_export( $_this->cache, true ), $this->end ), LOCK_EX );
+				file_put_contents(
+					"$cache_file.test",
+					sprintf(
+						'<?php $_mtime = %d; $_domain = %s; $_cache = %s; // %s',
+						$mtime,
+						var_export( $domain, true ),
+						var_export( $_this->cache, true ),
+						$this->end
+					),
+					LOCK_EX
+				);
 
 				// Test the file before committing.
 				$fp = fopen( "$cache_file.test", 'rb' );
