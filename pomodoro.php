@@ -66,6 +66,8 @@ class Pomodoro {
 			return false;
 		}
 
+		$mofile = apply_filters( 'load_textdomain_mofile', $mofile, $domain );
+
 		global $l10n;
 
 		$upstream = empty( $l10n[ $domain ] ) ? null : $l10n[ $domain ];
@@ -103,7 +105,7 @@ class MoCache_Translation {
 	 * @param $override
 	 */
 	public function __construct( $mofile, $domain, $override ) {
-		$this->mofile = apply_filters( 'load_textdomain_mofile', $mofile, $domain );
+		$this->mofile = $mofile;
 		$this->domain = $domain;
 		$this->override = $override;
 
