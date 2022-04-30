@@ -54,7 +54,7 @@ class MoCache_Translation {
 	 *
 	 * @param string $mofile The path to the mo file.
 	 * @param string $domain The textdomain.
-	 * @param Translations $merge The class in the same domain, we have overriden it.
+	 * @param $override
 	 */
 	public function __construct( $mofile, $domain, $override ) {
 		$this->mofile = apply_filters( 'load_textdomain_mofile', $mofile, $domain );
