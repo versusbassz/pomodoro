@@ -139,7 +139,7 @@ class MoCache_Translation {
 
 		$_this = &$this;
 
-		register_shutdown_function( function() use ( $cache_file, $_this, $mtime, $domain, $file_exists ) {
+		register_shutdown_function( function() use ( $cache_file, $_this, $mtime, $file_exists ) {
 			/**
 			 * New values have been found. Dump everything into a valid PHP script.
 			 */
@@ -151,7 +151,7 @@ class MoCache_Translation {
 					sprintf(
 						'<?php $_mtime = %d; $_domain = %s; $_cache = %s; // %s',
 						$mtime,
-						var_export( $domain, true ),
+						var_export( $_this->domain, true ),
 						var_export( $_this->cache, true ),
 						self::END
 					),
