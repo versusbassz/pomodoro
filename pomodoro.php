@@ -30,7 +30,7 @@ class MoCache_Translation {
 	 * Private state.
 	 */
 	private $domain = null;
-	private $cache = array();
+	private $cache = [];
 	private $busted = false;
 	private $override = null;
 	private $upstream = null;
@@ -54,7 +54,7 @@ class MoCache_Translation {
 		$this->override = $override;
 		$temp_dir = get_temp_dir();
 
-		$filename = md5( serialize( array( get_home_url(), $this->domain, $this->mofile ) ) );
+		$filename = md5( serialize( [ get_home_url(), $this->domain, $this->mofile ] ) );
 		if ( defined( 'POMODORO_CACHE_DIR' ) && POMODORO_CACHE_DIR && wp_mkdir_p( POMODORO_CACHE_DIR ) ) {
 			$temp_dir = POMODORO_CACHE_DIR;
 		}
@@ -75,7 +75,7 @@ class MoCache_Translation {
 			 * Mofile has been modified, invalidate it all.
 			 */
 			if ( ! isset( $_mtime ) || ( isset( $_mtime ) && $_mtime < $mtime ) ) {
-				$this->cache = array();
+				$this->cache = [];
 			}
 		}
 
@@ -123,7 +123,7 @@ class MoCache_Translation {
 		 * Merge overrides.
 		 */
 		if ( $this->override ) {
-			return $this->cache[ $cache_key ] = call_user_func_array( array( $this->override, $translate_function ), $args );
+			return $this->cache[ $cache_key ] = call_user_func_array( [ $this->override, $translate_function ], $args );
 		}
 
 		/**
@@ -135,7 +135,7 @@ class MoCache_Translation {
 			$this->upstream->import_from_file( $this->mofile );
 		}
 
-		return $this->cache[ $cache_key ] = call_user_func_array( array( $this->upstream, $translate_function ), $args );
+		return $this->cache[ $cache_key ] = call_user_func_array( [ $this->upstream, $translate_function ], $args );
 	}
 
 	/**
@@ -150,13 +150,13 @@ class MoCache_Translation {
 	 */
 	public function translate_plural( $singular, $plural, $count, $context = null ) {
 		$text = ( abs( $count ) == 1 ) ? $singular : $plural;
-		return $this->get_translation( $this->cache_key( array( $text, $count, $context ) ), $text, func_get_args() );
+		return $this->get_translation( $this->cache_key( [ $text, $count, $context ] ), $text, func_get_args() );
 	}
 
 	/**
 	 * Cache key calculator.
 	 */
 	private function cache_key( $args ) {
-		return md5( serialize( array( $args, $this->domain ) ) );
+		return md5( serialize( [ $args, $this->domain ] ) );
 	}
 }
