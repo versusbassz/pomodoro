@@ -212,14 +212,14 @@ class MoCache_Translation {
 	}
 
 	/**
-	 * The translate() function implementation that WordPress calls.
+	 * The \Translations->translate() method implementation that WordPress calls.
 	 */
 	public function translate( $text, $context = null ) {
 		return $this->get_translation( $this->cache_key( func_get_args() ), $text, func_get_args() );
 	}
 
 	/**
-	 * The translate_plural() function implementation that WordPress calls.
+	 * The \Translations->translate_plural() method implementation that WordPress calls.
 	 */
 	public function translate_plural( $singular, $plural, $count, $context = null ) {
 		$text = ( abs( $count ) == 1 ) ? $singular : $plural;
