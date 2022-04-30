@@ -11,6 +11,7 @@
  * Pressjitsu, Inc.
  * https://pressjitsu.com
  */
+
 namespace Pressjitsu\Pomodoro;
 
 use Mo;
@@ -32,10 +33,15 @@ add_filter( 'override_load_textdomain', function( $plugin_override, $domain, $mo
 
 class MoCache_Translation {
 	private $domain;
+
 	private $cache = [];
+
 	private $busted = false;
+
 	private $override;
+
 	private $upstream = null;
+
 	private $mofile;
 
 	/**
@@ -57,9 +63,11 @@ class MoCache_Translation {
 		$temp_dir = get_temp_dir();
 
 		$filename = md5( serialize( [ get_home_url(), $this->domain, $this->mofile ] ) );
+
 		if ( defined( 'POMODORO_CACHE_DIR' ) && POMODORO_CACHE_DIR && wp_mkdir_p( POMODORO_CACHE_DIR ) ) {
 			$temp_dir = POMODORO_CACHE_DIR;
 		}
+
 		$cache_file = sprintf( '%s/%s.mocache', untrailingslashit( $temp_dir ), $filename );
 
 		$mtime = filemtime( $this->mofile );
@@ -104,6 +112,7 @@ class MoCache_Translation {
 				$fp = fopen( "$cache_file.test", 'rb' );
 
 				fseek( $fp, -strlen( $_this->end ), SEEK_END );
+
 				if ( fgets( $fp ) == $_this->end ) {
 					rename( "$cache_file.test", $cache_file );
 				} else {
@@ -162,6 +171,7 @@ class MoCache_Translation {
 	 */
 	public function translate_plural( $singular, $plural, $count, $context = null ) {
 		$text = ( abs( $count ) == 1 ) ? $singular : $plural;
+
 		return $this->get_translation( $this->cache_key( [ $text, $count, $context ] ), $text, func_get_args() );
 	}
 
