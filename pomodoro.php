@@ -118,7 +118,7 @@ class MoCache_Translation {
 
 				fseek( $fp, -strlen( $_this->end ), SEEK_END );
 
-				if ( fgets( $fp ) == $_this->end ) {
+				if ( fgets( $fp ) === $_this->end ) {
 					rename( $test_cache_file, $cache_file );
 				} else {
 					trigger_error( "pomodoro {$test_cache_file} cache file missing end marker." );
