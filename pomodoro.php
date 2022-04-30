@@ -137,7 +137,7 @@ class MoCache_Translation {
 			}
 		}
 
-		$_this = &$this;
+		$_this = $this;
 
 		register_shutdown_function( function() use ( $cache_file, $_this, $mtime, $file_exists ) {
 			/**
