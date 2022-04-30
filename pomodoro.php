@@ -26,15 +26,12 @@ add_filter( 'override_load_textdomain', function( $plugin_override, $domain, $mo
 }, 999, 3 );
 
 class MoCache_Translation {
-	/**
-	 * Private state.
-	 */
-	private $domain = null;
+	private $domain;
 	private $cache = [];
 	private $busted = false;
-	private $override = null;
+	private $override;
 	private $upstream = null;
-	private $mofile = null;
+	private $mofile;
 
 	/**
 	 * Cache file end marker.
