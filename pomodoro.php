@@ -48,6 +48,8 @@ class Pomodoro {
 
 	public static function init() {
 		add_filter( 'override_load_textdomain', [ self::class, 'override_load_textdomain' ], 999, 3 );
+
+		Timer::register_dumping();
 	}
 
 	/**
@@ -106,6 +108,18 @@ class MoCache_Translation {
 	 * @param Translations $override The class in the same domain, we have overridden it
 	 */
 	public function __construct( $mofile, $domain, $override ) {
+		Timer::start();
+		//		usleep( 1000 ); // 1ms = 1_000_000 nanoseconds
+		Timer::stop();
+
+//		Timer::start( 'sleep_old', hrtime( true ) );
+//		usleep( 1000 ); // 1ms = 1_000_000 nanoseconds
+//		Timer::stop( 'sleep_old', hrtime( true ) );
+
+//		$start = -hrtime( true );
+//		usleep( 1000 ); // 1ms = 1_000_000 nanoseconds
+//		Timer::stop_raw( 'sleep', $start + hrtime( true ) );
+
 		$this->mofile = $mofile;
 		$this->domain = $domain;
 		$this->override = $override;
@@ -237,22 +251,138 @@ class MoCache_Translation {
 	 * The \Translations->translate() method implementation that WordPress calls.
 	 */
 	public function translate( $text, $context = null ) {
-		return $this->get_translation( $this->cache_key( func_get_args() ), $text, func_get_args() );
+
+		Timer::start( 'get_translation', hrtime( true ) );
+
+		$translation = $this->get_translation( $this->cache_key( func_get_args() ), $text, func_get_args() );
+
+		Timer::stop( 'get_translation', hrtime( true ) );
+
+		return $translation;
+
+//		return $this->get_translation( $this->cache_key( func_get_args() ), $text, func_get_args() );
 	}
 
 	/**
 	 * The \Translations->translate_plural() method implementation that WordPress calls.
 	 */
 	public function translate_plural( $singular, $plural, $count, $context = null ) {
+
+		Timer::start( 'get_translation', hrtime( true ) );
+
 		$text = ( abs( $count ) == 1 ) ? $singular : $plural;
 
-		return $this->get_translation( $this->cache_key( [ $text, $count, $context ] ), $text, func_get_args() );
+		$translation = $this->get_translation( $this->cache_key( [ $text, $count, $context ] ), $text, func_get_args() );
+
+		Timer::stop( 'get_translation', hrtime( true ) );
+
+		return $translation;
+
+//		$text = ( abs( $count ) == 1 ) ? $singular : $plural;
+//
+//		return $this->get_translation( $this->cache_key( [ $text, $count, $context ] ), $text, func_get_args() );
 	}
 
 	/**
 	 * Cache key calculator.
 	 */
 	private function cache_key( $args ) {
+//		Timer::start( 'cache_key', $start = hrtime( true ) );
+////		$hash = crc32( serialize( [ $args, $this->domain ] ) );
+//		$hash = md5( serialize( [ $args, $this->domain ] ) );
+//		Timer::stop( 'cache_key', $finish = hrtime( true ) );
+//
+//		return $hash;
+
 		return md5( serialize( [ $args, $this->domain ] ) );
+	}
+}
+
+class Timer {
+	protected static $timers = [];
+
+	protected static $stats = [];
+
+	protected static $request_id = '';
+
+	public static function start( $name = 'default', $time = null ) {
+		if ( isset( self::$timers[ $name ] ) ) {
+			throw new \Exception( "Timer {$name} is already running" );
+		}
+
+		self::$timers[ $name ] = $time ?: hrtime( true );
+	}
+
+	public static function stop( $name = 'default', $time = null ) {
+		if ( ! isset( self::$timers[ $name ] ) ) {
+			throw new \Exception( "Timer {$name} is not found" );
+		}
+
+		$stop_time = $time ?: hrtime( true );
+
+		$result = ( $stop_time - self::$timers[ $name ] );
+		unset( self::$timers[ $name ] );
+
+		if ( ! isset( self::$stats[ $name ] ) ) {
+			self::$stats[ $name ] = [
+				'name' => $name,
+				'total' => 0,
+				'qnty' => 0,
+				'items' => [],
+			];
+		}
+
+		++self::$stats[ $name ]['qnty'];
+		self::$stats[ $name ]['total'] += $result;
+		self::$stats[ $name ]['items'][] = $result;
+	}
+
+	public static function stop_raw( $name = 'default', $time ) {
+		if ( ! isset( self::$stats[ $name ] ) ) {
+			self::$stats[ $name ] = [
+				'name' => $name,
+				'total' => 0,
+				'qnty' => 0,
+				'items' => [],
+			];
+		}
+
+		++self::$stats[ $name ]['qnty'];
+		self::$stats[ $name ]['total'] += $time;
+		self::$stats[ $name ]['items'][] = $time;
+	}
+
+	public static function dump_stats() {
+		$fle_path = Pomodoro::get_temp_dir() . '/00-stats.log';
+
+		if ( ! self::$request_id ) {
+			self::$request_id = md5( microtime( true ) );
+		}
+
+		$stats = array_map( function ( $item ) {
+//			if ( $item['name'] === 'cache_key' ) {
+//				$item['items'] = array_slice( $item['items'], 0, 100 );
+//			}
+
+			if ( in_array( $item['name'], [ 'cache_key', 'get_translation' ] ) ) { //
+				$item['items'] = [];
+			}
+
+			return $item;
+		}, self::$stats );
+
+		$content = "\n\n" . self::$request_id . '  ' . var_export( $stats, true );
+
+		file_put_contents( $fle_path, $content, FILE_APPEND );
+	}
+
+	public static function register_dumping() {
+		add_action( 'wp_footer', [ self::class, 'add_shutdown_callback' ], 100000 );
+	}
+
+	public static function add_shutdown_callback() {
+		register_shutdown_function( function () {
+			self::dump_stats();
+		} );
 	}
 }
