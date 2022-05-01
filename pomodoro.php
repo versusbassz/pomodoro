@@ -256,3 +256,92 @@ class MoCache_Translation {
 		return md5( serialize( [ $args, $this->domain ] ) );
 	}
 }
+
+class Timer {
+	protected static $timers = [];
+
+	protected static $stats = [];
+
+	protected static $request_id = '';
+
+	public static function start( $name = 'default', $time = null ) {
+		if ( isset( self::$timers[ $name ] ) ) {
+			throw new \Exception( "Timer {$name} is already running" );
+		}
+
+		self::$timers[ $name ] = $time ?: hrtime( true );
+	}
+
+	public static function stop( $name = 'default', $time = null ) {
+		if ( ! isset( self::$timers[ $name ] ) ) {
+			throw new \Exception( "Timer {$name} is not found" );
+		}
+
+		$stop_time = $time ?: hrtime( true );
+
+		$result = ( $stop_time - self::$timers[ $name ] );
+		unset( self::$timers[ $name ] );
+
+		if ( ! isset( self::$stats[ $name ] ) ) {
+			self::$stats[ $name ] = [
+				'name' => $name,
+				'total' => 0,
+				'qnty' => 0,
+				'items' => [],
+			];
+		}
+
+		++self::$stats[ $name ]['qnty'];
+		self::$stats[ $name ]['total'] += $result;
+		self::$stats[ $name ]['items'][] = $result;
+	}
+
+	public static function stop_raw( $name = 'default', $result_time ) {
+		if ( ! isset( self::$stats[ $name ] ) ) {
+			self::$stats[ $name ] = [
+				'name' => $name,
+				'total' => 0,
+				'qnty' => 0,
+				'items' => [],
+			];
+		}
+
+		++self::$stats[ $name ]['qnty'];
+		self::$stats[ $name ]['total'] += $result_time;
+		self::$stats[ $name ]['items'][] = $result_time;
+	}
+
+	public static function dump_stats() {
+		$fle_path = Pomodoro::get_temp_dir() . '/00-stats.log';
+
+		if ( ! self::$request_id ) {
+			self::$request_id = md5( microtime( true ) );
+		}
+
+		$stats = array_map( function ( $item ) {
+//			if ( $item['name'] === 'cache_key' ) {
+//				$item['items'] = array_slice( $item['items'], 0, 100 );
+//			}
+
+//			if ( in_array( $item['name'], [ 'cache_key', 'get_translation' ] ) ) {
+//				$item['items'] = [];
+//			}
+
+			return $item;
+		}, self::$stats );
+
+		$content = "\n\n" . self::$request_id . '  ' . var_export( $stats, true );
+
+		file_put_contents( $fle_path, $content, FILE_APPEND );
+	}
+
+	public static function register_dumping() {
+		add_action( 'wp_footer', [ self::class, 'add_shutdown_callback' ], 100000 );
+	}
+
+	public static function add_shutdown_callback() {
+		register_shutdown_function( function () {
+			self::dump_stats();
+		} );
+	}
+}
