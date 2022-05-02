@@ -15,7 +15,7 @@
 
 namespace Pressjitsu\Pomodoro;
 
-use Mo;
+use MO;
 use Translations;
 
 Pomodoro::init();
@@ -233,10 +233,10 @@ class MoCache_Translation {
 		}
 
 		/**
-		 * Default Mo upstream.
+		 * Default MO upstream.
 		 */
 		if ( ! $this->upstream ) {
-			$this->upstream = new Mo();
+			$this->upstream = new MO();
 
 			do_action( 'load_textdomain', $this->domain, $this->mofile );
 
