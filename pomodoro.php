@@ -120,7 +120,12 @@ class MoCache_Translation {
 
 		$filename = md5( serialize( [ $home_url, $this->domain, $this->mofile ] ) );
 
-		$cache_file = sprintf( '%s/%s.mocache', untrailingslashit( $temp_dir ), $filename );
+		$cache_file = sprintf(
+			'%s/%s--%s.mocache',
+			untrailingslashit( $temp_dir ),
+			preg_replace( '/[^A-Za-z0-9\-_]/', '-' , $this->domain ),
+			$filename
+		);
 
 		$current_mtime = filemtime( $this->mofile );
 
