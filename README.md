@@ -1,4 +1,8 @@
-# WordPress Translation Cache (POMOdoro)
+# POMOdoro (WordPress Translation Cache)
+
+Note: it's a fork of https://github.com/pressjitsu/pomodoro/, initially.
+
+## Motivation
 
 The WordPress gettext implementation is very slow. It uses objects that
 cannot be cached into memory without reinstanting them.
@@ -34,5 +38,3 @@ You can use `POMODORO_CACHE_DIR` constant to change cache directory (needs full 
 ## License
 
 GPLv3
-
-It's a fork of https://github.com/pressjitsu/pomodoro/
