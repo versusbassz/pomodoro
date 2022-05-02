@@ -17,11 +17,11 @@ Example on a vanilla `ru_RU` locale WordPress site:
 
 Before:
 
-![Before](https://raw.githubusercontent.com/versusbassz/pomodoro/master/assets/before.png)
+![Before](https://raw.githubusercontent.com/versusbassz/pomodoro/main/assets/before.png)
 
 After:
 
-![After](https://raw.githubusercontent.com/versusbassz/pomodoro/master/assets/after.png)
+![After](https://raw.githubusercontent.com/versusbassz/pomodoro/main/assets/after.png)
 
 ## Installation
 
