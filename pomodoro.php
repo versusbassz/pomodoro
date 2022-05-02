@@ -19,10 +19,20 @@ use Translations;
 
 Pomodoro::init();
 
+/**
+ * The root class of the plugin.
+ * Contains some utility logic and starts everything.
+ */
 class Pomodoro {
+	/**
+	 * @var string The path in filesystem to a directory where cached files are stored
+	 */
 	protected static $tmp_dir_path = '';
 
 	/**
+	 * Returns the path in filesystem to a directory where cached files are stored.
+	 * Tries to create the directory if it doesn't exist and POMODORO_CACHE_DIR constant is used.
+	 *
 	 * @return string
 	 */
 	public static function get_temp_dir() {
@@ -46,6 +56,11 @@ class Pomodoro {
 		return self::$tmp_dir_path;
 	}
 
+	/**
+	 * Starts the plugin
+	 *
+	 * @return void
+	 */
 	public static function init() {
 		add_filter( 'override_load_textdomain', [ self::class, 'override_load_textdomain' ], 999, 3 );
 	}
@@ -81,16 +96,38 @@ class Pomodoro {
 }
 
 class MoCache_Translation {
+	/**
+	 * @var string The textdomain of a current .mo file
+	 */
 	private $domain;
 
+	/**
+	 * @var string[] The set of cached strings for translation
+	 */
 	private $cache = [];
 
+	/**
+	 * @var bool Did new strings have been requested ("new" means "are not in cache").
+	 *           "True" value triggers rebuilding of a cached file
+	 */
 	private $busted = false;
 
+	/**
+	 * @var Translations The object for a current textdomain that was in $l10n global variable
+	 *                   before we try to place our own cache object there.
+	 *
+	 *                   Notes: \MO class is descendant of \Translations
+	 */
 	private $override;
 
+	/**
+	 * @var MO|null The origin \MO object (the representation of .mo file)
+	 */
 	private $upstream = null;
 
+	/**
+	 * @var string The path in filesystem to a target .mo file
+	 */
 	private $mofile;
 
 	/**
@@ -129,9 +166,9 @@ class MoCache_Translation {
 			 */
 			include $cache_file;
 
-			/** @var int $_mtime */
-			/** @var string $_domain */
-			/** @var array $_cache */
+			/** @var int $_mtime Timestamp. Modification time of source .mo file that were cached on the moment of caching. */
+			/** @var string $_domain The textdomain of a source .mo file. */
+			/** @var array $_cache The cached data (strings for translation). */
 
 			$cached_mtime = $_mtime ?? 0;
 
@@ -191,6 +228,8 @@ class MoCache_Translation {
 	}
 
 	/**
+	 * Fetches a translated string from the cache of other sources
+	 *
 	 * @param string $cache_key The hash of arguments of the higher functions (see $args parameter)
 	 * @param string $text The string to translate
 	 * @param array $args The arguments of the higher functions themselves
@@ -235,6 +274,11 @@ class MoCache_Translation {
 
 	/**
 	 * The \Translations->translate() method implementation that WordPress calls.
+	 *
+	 * @param string $text The string for translation.
+	 * @param string $context The description for a usage case (in fact, it's gettext context string).
+	 *
+	 * @return string
 	 */
 	public function translate( $text, $context = null ) {
 		return $this->get_translation( $this->cache_key( func_get_args() ), $text, func_get_args() );
@@ -242,6 +286,13 @@ class MoCache_Translation {
 
 	/**
 	 * The \Translations->translate_plural() method implementation that WordPress calls.
+	 *
+	 * @param string $singular The singular form of the string for translation.
+	 * @param string $plural The plural form of the string for translation.
+	 * @param int    $count The quantity of items for a current call to detect singular/plural form.
+	 * @param string $context The description for a usage case (in fact, it's gettext context string).
+	 *
+	 * @return string
 	 */
 	public function translate_plural( $singular, $plural, $count, $context = null ) {
 		$text = ( abs( $count ) == 1 ) ? $singular : $plural;
@@ -251,6 +302,10 @@ class MoCache_Translation {
 
 	/**
 	 * Cache key calculator.
+	 *
+	 * @param array $args The parameters of translate* functions.
+	 *
+	 * @return string The key (hash) for the provided $args.
 	 */
 	private function cache_key( $args ) {
 		return md5( serialize( [ $args, $this->domain ] ) );
