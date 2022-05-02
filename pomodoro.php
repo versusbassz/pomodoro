@@ -25,38 +25,6 @@ Pomodoro::init();
  */
 class Pomodoro {
 	/**
-	 * @var string The path in filesystem to a directory where cached files are stored
-	 */
-	protected static $tmp_dir_path = '';
-
-	/**
-	 * Returns the path in filesystem to a directory where cached files are stored.
-	 * Tries to create the directory if it doesn't exist and POMODORO_CACHE_DIR constant is used.
-	 *
-	 * @return string
-	 */
-	public static function get_temp_dir() {
-		if ( self::$tmp_dir_path ) {
-			return self::$tmp_dir_path;
-		}
-
-		if ( defined( 'POMODORO_CACHE_DIR' ) && POMODORO_CACHE_DIR ) {
-			$path_exists = wp_mkdir_p( POMODORO_CACHE_DIR );
-
-			// TODO trigger error here if $path_exists === false
-
-			if ( $path_exists ) {
-				self::$tmp_dir_path = POMODORO_CACHE_DIR;
-				return self::$tmp_dir_path;
-			}
-		}
-
-		self::$tmp_dir_path = get_temp_dir();
-
-		return self::$tmp_dir_path;
-	}
-
-	/**
 	 * Starts the plugin
 	 *
 	 * @return void
@@ -148,7 +116,7 @@ class MoCache_Translation {
 		$this->override = $override;
 
 		$home_url = get_home_url();
-		$temp_dir = Pomodoro::get_temp_dir();
+		$temp_dir = Utils::get_temp_dir();
 
 		$filename = md5( serialize( [ $home_url, $this->domain, $this->mofile ] ) );
 
@@ -309,5 +277,39 @@ class MoCache_Translation {
 	 */
 	private function cache_key( $args ) {
 		return md5( serialize( [ $args, $this->domain ] ) );
+	}
+}
+
+class Utils {
+	/**
+	 * @var string The path in filesystem to a directory where cached files are stored
+	 */
+	protected static $tmp_dir_path = '';
+
+	/**
+	 * Returns the path in filesystem to a directory where cached files are stored.
+	 * Tries to create the directory if it doesn't exist and POMODORO_CACHE_DIR constant is used.
+	 *
+	 * @return string
+	 */
+	public static function get_temp_dir() {
+		if ( self::$tmp_dir_path ) {
+			return self::$tmp_dir_path;
+		}
+
+		if ( defined( 'POMODORO_CACHE_DIR' ) && POMODORO_CACHE_DIR ) {
+			$path_exists = wp_mkdir_p( POMODORO_CACHE_DIR );
+
+			// TODO trigger error here if $path_exists === false
+
+			if ( $path_exists ) {
+				self::$tmp_dir_path = POMODORO_CACHE_DIR;
+				return self::$tmp_dir_path;
+			}
+		}
+
+		self::$tmp_dir_path = get_temp_dir();
+
+		return self::$tmp_dir_path;
 	}
 }
