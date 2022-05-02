@@ -1,0 +1,17 @@
+<phpunit
+    colors="true"
+    bootstrap="tests/wpunit/bootstrap.php"
+    backupGlobals="false"
+>
+    <testsuites>
+
+        <testsuite name="common">
+            <directory>tests/wpunit/src</directory>
+        </testsuite>
+
+    </testsuites>
+
+    <php>
+        <const name="POMODORO_RUN_TESTS" value="1" />
+    </php>
+</phpunit>

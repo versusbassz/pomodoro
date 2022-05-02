@@ -1,5 +1,13 @@
 {
     "require": {
         "php": "^7.1 || ^8.0"
+    },
+    "require-dev": {
+        "yoast/phpunit-polyfills": "^1.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Versusbassz\\Pomodoro\\Tests\\": "tests/wpunit/src/"
+        }
     }
 }
