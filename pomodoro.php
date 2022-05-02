@@ -13,7 +13,7 @@
  * https://pressjitsu.com
  */
 
-namespace Pressjitsu\Pomodoro;
+namespace Versusbassz\Pomodoro;
 
 use MO;
 use Translations;
