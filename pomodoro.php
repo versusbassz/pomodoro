@@ -3,12 +3,12 @@
  * Plugin Name: POMOdoro Translation Cache
  * Description: A cached translation override for WordPress.
  * Plugin URI: https://github.com/versusbassz/pomodoro/
+ * License: GPLv3
  *
  * Bakes and stows away expensive translation lookups
  *  as PHP hashtables. Fast and beautiful.
  *
  * It's a fork of https://github.com/pressjitsu/pomodoro/
- * GPL3
  * Pressjitsu, Inc.
  * https://pressjitsu.com
  */
