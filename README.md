@@ -53,7 +53,7 @@ wp pomodoro list
 #       by other requests or CLI-commands done after the moment of removing.
 wp pomodoro prune
 
-# prune cached files for a specific text domain
+# prune cached files for a specific textdomain
 # note: all cached files for that textdomain will be removed
 wp pomodoro prune <textdomain>
 
