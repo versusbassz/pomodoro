@@ -35,6 +35,35 @@ The more plugins you have the better the performance gains.
 
 You can use `POMODORO_CACHE_DIR` constant to change cache directory (needs full path).
 
+## WP-CLI interface
+```shell
+# print stats about cache directory and files
+# to see more raw data use --format parameter
+wp pomodoro stats
+wp pomodoro stats --format=print_r
+wp pomodoro stats --format=var_dump
+wp pomodoro stats --format=json
+wp pomodoro stats --format=json --pretty
+
+# list cached files
+wp pomodoro list
+
+# prune cached files
+# note: remember that the removed files can be recreated immediately 
+#       by other requests or CLI-commands done after the moment of removing.
+wp pomodoro prune
+
+# prune cached files for a specific text domain
+# note: all cached files for that textdomain will be removed
+wp pomodoro prune <textdomain>
+
+# lint cached files
+wp pomodoro lint
+
+# print the plugin version
+wp pomodoro version
+```
+
 ## License
 
 GPLv3

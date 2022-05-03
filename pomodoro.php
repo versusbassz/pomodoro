@@ -16,8 +16,10 @@
 
 namespace Versusbassz\Pomodoro;
 
+use Throwable;
 use MO;
 use Translations;
+use WP_CLI;
 
 define( 'POMODORO_VERSION', '1.0.0-alpha' );
 
@@ -35,6 +37,10 @@ class Pomodoro {
 	 */
 	public static function init() {
 		add_filter( 'override_load_textdomain', [ self::class, 'override_load_textdomain' ], 999, 3 );
+
+		if ( defined( 'WP_CLI' ) ) {
+			CLI::register_commands();
+		}
 	}
 
 	/**
@@ -127,7 +133,7 @@ class MoCache_Translation {
 		$cache_file = sprintf(
 			'%s/%s--%s.mocache',
 			untrailingslashit( $temp_dir ),
-			preg_replace( '/[^A-Za-z0-9\-_]/', '-' , $this->domain ),
+			Utils::sanitaze_textdomain_for_fs( $this->domain ),
 			$filename
 		);
 
@@ -289,6 +295,168 @@ class MoCache_Translation {
 	}
 }
 
+class CLI {
+	public static function register_commands() {
+		WP_CLI::add_command( 'pomodoro stats', [ self::class, 'stats' ] );
+		WP_CLI::add_command( 'pomodoro list', [ self::class, 'list' ] );
+		WP_CLI::add_command( 'pomodoro lint', [ self::class, 'lint' ] );
+		WP_CLI::add_command( 'pomodoro prune', [ self::class, 'prune' ] );
+		WP_CLI::add_command( 'pomodoro version', [ self::class, 'version' ] );
+	}
+
+	public static function stats( $args, $args_assoc ) {
+		$args = wp_parse_args( $args_assoc , [
+			'format' => 'regular',
+		] );
+
+		self::switch_locale();
+
+		$data = Utils::get_dir_stats();
+
+		switch ( $args['format'] ) {
+			case 'regular':
+				$content = '';
+
+				$content .= sprintf( "Version: %s\n", POMODORO_VERSION );
+				$content .= sprintf( "Cache dir: %s\n", $data['dir_path'] );
+				$content .= sprintf( "Cached files: %d\n", $data['files_total'] ) ;
+				$content .= sprintf( "Disk space used: %s\n", $data['files_size'] ) ;
+
+				WP_CLI::log( trim( $content ) );
+				break;
+
+			case 'var_dump':
+				var_dump( $data );
+				break;
+
+			case 'print_r':
+				print_r( $data );
+				break;
+
+			case 'json':
+				$flags =  isset( $args_assoc['pretty'] ) ? JSON_PRETTY_PRINT : 0;
+				echo json_encode( $data, $flags ) . PHP_EOL;
+				break;
+		}
+	}
+
+	public static function list() {
+		self::switch_locale();
+
+		$data = Utils::get_dir_stats();
+
+		WP_CLI::log( sprintf( "Cache dir: %s", $data['dir_path'] ) );
+		WP_CLI\Utils\format_items( 'table', $data['files'], [ 'filename', 'size', 'mtime' ] );
+	}
+
+	public static function lint() {
+		self::switch_locale();
+
+		if ( ! function_exists( 'exec' ) ) {
+			WP_CLI::error( '"exec" function is not available, it\'s used for linting' );
+		}
+
+		$data = Utils::get_dir_stats();
+
+		if ( ! count( $data['files'] ) ) {
+			WP_CLI::log( sprintf( 'Files not found in %s', $data['dir_path'] ) );
+			return;
+		}
+
+		$successful = 0;
+		$failed = 0;
+
+		foreach ( $data['files'] as $file ) {
+			$code = file_get_contents( $file['path'] );
+
+			$old = ini_set( 'display_errors', 0 );
+
+			++$successful;
+
+			// https://stackoverflow.com/a/51733942
+			try {
+				token_get_all( $code, TOKEN_PARSE );
+			} catch ( Throwable $ex ) {
+				++$failed;
+				--$successful;
+				$error = $ex->getMessage();
+				$line = $ex->getLine();
+				WP_CLI::log( sprintf( "Parse error:\n\tpath: %s:%s\n\toutput: %s", $file['path'], $line, $error ) );
+			} finally {
+				ini_set('display_errors', $old);
+			}
+		}
+
+		WP_CLI::line('===================');
+		WP_CLI::log( sprintf( 'Total files: %d', $data['files_total'] ) );
+
+		$valid_files_msg = sprintf( 'Valid files: %d', $successful );
+		$failed ? WP_CLI::log( $valid_files_msg ) : WP_CLI::success( $valid_files_msg );
+
+		if ( $failed ) {
+			WP_CLI::error( sprintf( 'Validation failed for: %d', $failed ) );
+		}
+	}
+
+	public static function prune( $args ) {
+		self::switch_locale();
+
+		$data = Utils::get_dir_stats();
+
+		if ( ! count( $data['files'] ) ) {
+			WP_CLI::log( sprintf( 'Files not found in %s', $data['dir_path'] ) );
+			return;
+		}
+
+		$files = $data['files'] ;
+
+		$textdomain = isset( $args[0] ) && $args[0] ? $args[0] : '';
+
+		if ( $textdomain ) {
+			$files = array_filter( $files, function ( $file ) use ( $textdomain ) {
+				$textdomain_for_fs = Utils::sanitaze_textdomain_for_fs( $textdomain );
+
+				return strpos( $file['filename'], $textdomain_for_fs ) === 0;
+			} );
+		}
+
+		$removed_counter = 0;
+		$failed_counter = 0;
+
+		foreach ( $files as $file ) {
+			$removed = unlink( $file['path'] );
+
+			if ( ! $removed ) {
+				++$failed_counter;
+				WP_CLI::log( sprintf( 'Removing failed for: %s', $file['path'] ) );
+			}
+
+			++$removed_counter;
+		}
+
+		WP_CLI::log( sprintf( 'Removed files: %d', $removed_counter ) );
+
+		if ( $failed_counter ) {
+			WP_CLI::error( sprintf( 'Total failed files: %d', $failed_counter ) );
+		}
+
+		WP_CLI::success( 'Done' );
+	}
+
+	public static function version() {
+		WP_CLI::log( POMODORO_VERSION );
+	}
+
+	/**
+	 * Use default locale to not to apply translation to files sizes
+	 *
+	 * @return void
+	 */
+	protected static function switch_locale() {
+		switch_to_locale( 'en_US' );
+	}
+}
+
 class Utils {
 	/**
 	 * @var string The path in filesystem to a directory where cached files are stored
@@ -320,5 +488,46 @@ class Utils {
 		self::$tmp_dir_path = get_temp_dir();
 
 		return self::$tmp_dir_path;
+	}
+
+	public static function get_dir_stats() {
+		$cache_dir = Utils::get_temp_dir();
+		$files = scandir( $cache_dir );
+
+		$files_data = [];
+		$files_total = 0;
+		$files_total_size = 0;
+
+		foreach ( $files as $file ) {
+			$file_path = trailingslashit( $cache_dir ) . $file;
+
+			if ( preg_match( '/\.mocache$/', $file_path ) && is_file( $file_path ) ) {
+				$file_size = filesize( $file_path );
+
+				++$files_total;
+				$files_total_size += $file_size;
+
+				$files_data[] = [
+					'filename' => $file,
+					'path' => $file_path,
+					'size' => size_format( $file_size ),
+					'size_raw' => $file_size,
+					'mtime' => date( 'Y-m-d H:i:s', filemtime( $file_path ) ),
+					'ctime' => date( 'Y-m-d H:i:s', filectime( $file_path ) ),
+				];
+			}
+		}
+
+		return [
+			'dir_path' => $cache_dir,
+			'files_total' => $files_total,
+			'files_size_raw' => $files_total_size,
+			'files_size' => size_format( $files_total_size ),
+			'files' => $files_data,
+		];
+	}
+
+	public static function sanitaze_textdomain_for_fs( $textdomain ) {
+		return preg_replace( '/[^A-Za-z0-9\-_]/', '-' , $textdomain );
 	}
 }
