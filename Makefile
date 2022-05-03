@@ -52,10 +52,12 @@ dev-env--install:
 	docker-compose exec mariadb mysql -uroot -ppassword -e "GRANT FILE on *.* to 'wordpress'@'%';" && \
 	\
 	make wp 'core install --url="http://pomodoro.docker.local:8000/" --title="Dev site" --admin_user="admin" --admin_password="admin" --admin_email="admin@docker.local" --skip-email' && \
+	make wp 'language core install ru_RU --activate' && \
 	\
 	docker-compose exec mariadb mysql -uroot -ppassword -e "create database wordpress_test;" && \
 	docker-compose exec mariadb mysql -uroot -ppassword -e "GRANT ALL PRIVILEGES ON wordpress_test.* TO 'wordpress'@'%';" && \
-	docker-compose exec test_php wp core install --url="http://pomodoro.docker.local:8000/" --title="Testing site" --admin_user="admin" --admin_password="admin" --admin_email="admin@docker.local" --skip-email
+	docker-compose exec test_php wp core install --url="http://pomodoro.docker.local:8000/" --title="Testing site" --admin_user="admin" --admin_password="admin" --admin_email="admin@docker.local" --skip-email && \
+	docker-compose exec test_php wp language core install ru_RU --activate
 
 ### Regular commands
 dev-env--start:
