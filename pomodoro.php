@@ -221,12 +221,11 @@ class MoCache_Translation {
 	 * Fetches a translated string from the cache of other sources
 	 *
 	 * @param string $cache_key The hash of arguments of the higher functions (see $args parameter)
-	 * @param string $text The string to translate
 	 * @param array $args The arguments of the higher functions themselves
 	 *
 	 * @return mixed
 	 */
-	private function get_translation( $cache_key, $text, $args ) {
+	private function get_translation( $cache_key, $args ) {
 		/**
 		 * Check cache first.
 		 */
@@ -271,7 +270,7 @@ class MoCache_Translation {
 	 * @return string
 	 */
 	public function translate( $text, $context = null ) {
-		return $this->get_translation( $this->cache_key( func_get_args() ), $text, func_get_args() );
+		return $this->get_translation( $this->cache_key( func_get_args() ), func_get_args() );
 	}
 
 	/**
@@ -287,7 +286,7 @@ class MoCache_Translation {
 	public function translate_plural( $singular, $plural, $count, $context = null ) {
 		$text = ( abs( $count ) == 1 ) ? $singular : $plural;
 
-		return $this->get_translation( $this->cache_key( [ $text, $count, $context ] ), $text, func_get_args() );
+		return $this->get_translation( $this->cache_key( [ $text, $count, $context ] ), func_get_args() );
 	}
 
 	/**
