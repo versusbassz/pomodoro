@@ -64,6 +64,11 @@ wp pomodoro lint
 wp pomodoro version
 ```
 
+## Other settings
+If necessary, define `POMODORO_DONT_UPDATE` constant with `true` (boolean) value
+to disable updating of cached files during a current request.  
+It's used inside `wp pomodoro prune` command.
+
 ## License
 
 GPLv3

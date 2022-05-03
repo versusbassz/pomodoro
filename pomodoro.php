@@ -168,6 +168,13 @@ class MoCache_Translation {
 
 		register_shutdown_function( function() use ( $cache_file, $_this, $current_mtime, $file_exists ) {
 			/**
+			 * Don't update cached files during a request of "wp pomodoro prune" command
+			 */
+			if ( defined( 'POMODORO_DONT_UPDATE' ) && POMODORO_DONT_UPDATE ) {
+				return;
+			}
+
+			/**
 			 * About this check:
 			 * empty( $_this->cache ) && ! $file_exists
 			 *
@@ -438,6 +445,13 @@ class CLI {
 
 		if ( $failed_counter ) {
 			WP_CLI::error( sprintf( 'Total failed files: %d', $failed_counter ) );
+		}
+
+		/**
+		 * Don't update cached files during a request of "wp pomodoro prune" command
+		 */
+		if ( ! defined( 'POMODORO_DONT_UPDATE' ) ) {
+			define( 'POMODORO_DONT_UPDATE', true );
 		}
 
 		WP_CLI::success( 'Done' );
