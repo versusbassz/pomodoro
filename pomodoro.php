@@ -1,6 +1,7 @@
 <?php
 /**
  * Plugin Name: POMOdoro Translation Cache
+ * Version: 1.0.0-alpha
  * Description: A cached translation override for WordPress.
  * Plugin URI: https://github.com/versusbassz/pomodoro/
  * License: GPLv3
@@ -17,6 +18,8 @@ namespace Versusbassz\Pomodoro;
 
 use MO;
 use Translations;
+
+define( 'POMODORO_VERSION', '1.0.0-alpha' );
 
 Pomodoro::init();
 
